@@ -1,0 +1,7 @@
+public
+node_modules
+dist
+src/components/app-ui/vue-awesome-paginate
+src/components/app-svg
+.history
+index.html

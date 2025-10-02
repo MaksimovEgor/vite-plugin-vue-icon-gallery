@@ -7,8 +7,8 @@ import {
 } from "./simpleGalleryServer.js";
 
 export interface IconGalleryOptions {
-  /** Путь к папке с иконками (по умолчанию: 'src/components/app-svg') */
-  iconsPath?: string;
+  /** Путь к папке с иконками или массив путей (по умолчанию: 'src/components/app-svg') */
+  iconsPath?: string | string[];
   /** Порт для галереи (по умолчанию: 3002) */
   port?: number;
   /** Автоматически открывать браузер (по умолчанию: true) */
@@ -24,7 +24,10 @@ export function vueIconGallery(options: IconGalleryOptions = {}): Plugin {
 
   // Сканируем иконки при инициализации плагина
   const icons = scanIcons(iconsPath);
-  console.log(`🎨 Найдено ${icons.length} иконок в папке ${iconsPath}`);
+  const pathsArray = Array.isArray(iconsPath) ? iconsPath : [iconsPath];
+  console.log(
+    `🎨 Найдено ${icons.length} иконок в папках: ${pathsArray.join(", ")}`
+  );
 
   let galleryServer: any = null;
 
