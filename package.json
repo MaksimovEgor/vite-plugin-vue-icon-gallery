@@ -31,12 +31,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/vite-plugin-vue-icon-gallery.git"
+    "url": "https://github.com/MaksimovEgor/vite-plugin-vue-icon-gallery.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/vite-plugin-vue-icon-gallery/issues"
+    "url": "https://github.com/MaksimovEgor/vite-plugin-vue-icon-gallery/issues"
   },
-  "homepage": "https://github.com/yourusername/vite-plugin-vue-icon-gallery#readme",
+  "homepage": "https://github.com/MaksimovEgor/vite-plugin-vue-icon-gallery#readme",
   "dependencies": {
     "vue": "^3.0.0"
   },
