@@ -11,14 +11,27 @@
         />
         <div class="filter-buttons">
           <div class="toggle-buttons">
-            <button class="toggle-btn" :class="{ active: fillEnabled }" @click="toggleFill">
+            <button
+              class="toggle-btn"
+              :class="{ active: fillEnabled }"
+              @click="toggleFill"
+            >
               Fill
             </button>
-            <button class="toggle-btn" :class="{ active: strokeEnabled }" @click="toggleStroke">
+            <button
+              class="toggle-btn"
+              :class="{ active: strokeEnabled }"
+              @click="toggleStroke"
+            >
               Stroke
             </button>
 
-            <input v-model="currentColor" type="color" class="color-picker" @input="updateColors" />
+            <input
+              v-model="currentColor"
+              type="color"
+              class="color-picker"
+              @input="updateColors"
+            />
           </div>
         </div>
       </div>
@@ -39,84 +52,90 @@
       </div>
     </div>
 
-    <div v-if="copiedIcon" class="copy-notification">Copied: {{ copiedIcon }}</div>
+    <div v-if="copiedIcon" class="copy-notification">
+      Copied: {{ copiedIcon }}
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed } from "vue";
 
 // Automatically import all SVG components from the app-svg directory
-const svgModules = import.meta.glob('@/components/app-svg/*.vue', { eager: true })
+const svgModules = import.meta.glob("@/components/app-svg/*.vue", {
+  eager: true,
+});
 
-const searchQuery = ref('')
-const copiedIcon = ref('')
+const searchQuery = ref("");
+const copiedIcon = ref("");
 
-const fillEnabled = ref(true)
-const strokeEnabled = ref(true)
-const currentColor = ref('#ffffff')
+const fillEnabled = ref(true);
+const strokeEnabled = ref(true);
+const currentColor = ref("#ffffff");
 
 // Automatically generate icons array from imported modules
 const icons = Object.entries(svgModules)
   .map(([path, module]) => {
     // Extract component name from file path
-    const fileName = path.split('/').pop()?.replace('.vue', '') || ''
+    const fileName = path.split("/").pop()?.replace(".vue", "") || "";
     return {
       name: fileName,
-      component: (module as any).default
-    }
+      component: (module as any).default,
+    };
   })
-  .filter((icon) => icon.name !== 'IconGallery') // Exclude the gallery component itself
+  .filter((icon) => icon.name !== "IconGallery"); // Exclude the gallery component itself
 
 const filteredIcons = computed(() => {
   if (!searchQuery.value) {
-    return icons
+    return icons;
   }
 
-  return icons.filter((icon) => icon.name.toLowerCase().includes(searchQuery.value.toLowerCase()))
-})
+  return icons.filter((icon) =>
+    icon.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+  );
+});
 
 const toggleFill = () => {
-  fillEnabled.value = !fillEnabled.value
-}
+  fillEnabled.value = !fillEnabled.value;
+};
 
 const toggleStroke = () => {
-  strokeEnabled.value = !strokeEnabled.value
-}
+  strokeEnabled.value = !strokeEnabled.value;
+};
 
 const updateColors = () => {
   // This will trigger the computed property to update
-}
+};
 
 const iconStyles = computed(() => {
-  const styles: any = {}
+  const styles: any = {};
 
   if (fillEnabled.value) {
-    styles.fill = currentColor.value
+    styles.fill = currentColor.value;
   } else {
-    styles.fill = 'none'
+    styles.fill = "none";
   }
 
   if (strokeEnabled.value) {
-    styles.stroke = currentColor.value
+    styles.stroke = currentColor.value;
   } else {
-    styles.stroke = 'none'
+    styles.stroke = "none";
   }
 
-  return styles
-})
+  return styles;
+});
 
 const copyIconName = async (iconName: string) => {
   try {
-    await navigator.clipboard.writeText(iconName)
-    copiedIcon.value = iconName
+    await navigator.clipboard.writeText(iconName);
+    copiedIcon.value = iconName;
     setTimeout(() => {
-      copiedIcon.value = ''
-    }, 2000)
+      copiedIcon.value = "";
+    }, 2000);
   } catch (err) {
-    console.error('Failed to copy icon name:', err)
+    console.error("Failed to copy icon name:", err);
   }
-}
+};
 </script>
 
 <style>
@@ -166,12 +185,7 @@ const copyIconName = async (iconName: string) => {
 
 body {
   margin: 0;
-  font-family:
-    'NotoSans',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
+  font-family: "NotoSans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     sans-serif;
   background: var(--col-1);
   color: var(--font-color);
@@ -215,7 +229,7 @@ body {
   font-size: 1rem;
   background: var(--col-3);
   color: var(--font-color);
-  font-family: 'NotoSans', sans-serif;
+  font-family: "NotoSans", sans-serif;
 }
 
 .search-input:focus {
@@ -251,7 +265,7 @@ body {
   color: var(--col-8);
   font-size: 0.875rem;
   font-weight: 500;
-  font-family: 'NotoSans', sans-serif;
+  font-family: "NotoSans", sans-serif;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -259,7 +273,7 @@ body {
 }
 
 .toggle-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -388,7 +402,7 @@ body {
   color: var(--font-color);
   text-align: center;
   word-break: break-word;
-  font-family: 'NotoSans', sans-serif;
+  font-family: "NotoSans", sans-serif;
 }
 
 .icon-copy-hint {
@@ -397,7 +411,7 @@ body {
   margin-top: 0.25rem;
   opacity: 0;
   transition: opacity 0.2s;
-  font-family: 'NotoSans', sans-serif;
+  font-family: "NotoSans", sans-serif;
 }
 
 .icon-item:hover .icon-copy-hint {
@@ -415,7 +429,7 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   animation: slideIn 0.3s ease-out;
-  font-family: 'NotoSans', sans-serif;
+  font-family: "NotoSans", sans-serif;
   font-weight: 500;
 }
 
