@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ESNext",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
@@ -12,7 +12,8 @@
     "rootDir": "src"
   },
   "include": [
-    "src/index.ts"
+    "src/index.ts",
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules",

@@ -1,6 +1,10 @@
 import type { Plugin } from "vite";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import type { AddressInfo } from "net";
+import { scanIcons } from "./iconScanner.js";
+import {
+  startGalleryServer,
+  stopGalleryServer,
+} from "./simpleGalleryServer.js";
 
 export interface IconGalleryOptions {
   /** Путь к папке с иконками (по умолчанию: 'src/components/app-svg') */
@@ -18,43 +22,51 @@ export function vueIconGallery(options: IconGalleryOptions = {}): Plugin {
     open = true,
   } = options;
 
+  // Сканируем иконки при инициализации плагина
+  const icons = scanIcons(iconsPath);
+  console.log(`🎨 Найдено ${icons.length} иконок в папке ${iconsPath}`);
+
+  let galleryServer: any = null;
+
+  // Добавляем обработчик для корректного завершения
+  const cleanup = () => {
+    if (galleryServer) {
+      console.log("🎨 Останавливаем галерею иконок...");
+      stopGalleryServer();
+      galleryServer = null;
+    }
+  };
+
   return {
     name: "vue-icon-gallery",
-    configureServer(server) {
-      // Создаем отдельный Vite сервер для галереи
-      const createIconGalleryServer = async () => {
-        const { createServer } = await import("vite");
 
-        const iconGalleryServer = await createServer({
-          configFile: false,
-          root: __dirname,
-          server: {
-            port,
-            open,
-            host: "0.0.0.0",
-          },
-          resolve: {
-            alias: {
-              "@": resolve(process.cwd(), "src"),
-            },
-          },
-          plugins: [(await import("@vitejs/plugin-vue")).default()],
+    configureServer(server) {
+      console.log(`🎨 Configuring server, starting gallery on port ${port}...`);
+
+      // Запускаем галерею асинхронно, но не блокируем основной процесс
+      startGalleryServer({ iconsPath, port, open })
+        .then((server) => {
+          galleryServer = server;
+
+          const addr = server.address() as AddressInfo;
+          const galleryPort = addr?.port || port;
+          console.log(
+            `🎨 Icon Gallery запущена на отдельном сервере: http://localhost:${galleryPort}`
+          );
+        })
+        .catch((error) => {
+          console.warn("Не удалось запустить галерею иконок:", error);
         });
 
-        await iconGalleryServer.listen();
-        console.log(`🎨 Icon Gallery доступна на http://localhost:${port}`);
-      };
-
-      // Запускаем сервер галереи при старте основного сервера
-      server.middlewares.use("/icon-gallery", (req, res, next) => {
-        if (req.url === "/icon-gallery") {
-          createIconGalleryServer();
-          res.writeHead(302, { Location: `http://localhost:${port}` });
-          res.end();
-        } else {
-          next();
-        }
+      // Добавляем обработчик для cleanup при остановке Vite сервера
+      server.middlewares.use((req, res, next) => {
+        next();
       });
+
+      // Возвращаем cleanup функцию
+      return () => {
+        cleanup();
+      };
     },
   };
 }
