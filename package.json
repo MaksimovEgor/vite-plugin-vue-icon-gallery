@@ -34,13 +34,14 @@
   },
   "keywords": [
     "vite",
-    "plugin",
     "vue",
     "icons",
     "svg",
     "gallery",
     "preview",
-    "dev-tools"
+    "previewer",
+    "template",
+    "components"
   ],
   "author": "maksimoveg2016@yandex.ru",
   "license": "MIT",
