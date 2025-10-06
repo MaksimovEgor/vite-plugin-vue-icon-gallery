@@ -1,6 +1,6 @@
 {
   "name": "vue-icon-gallery",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "description": "Vite plugin for interactive SVG icon gallery in Vue projects",
   "main": "dist/index.js",
@@ -56,15 +56,14 @@
   "peerDependencies": {
     "vite": ">=5.0.0"
   },
-  "dependencies": {
-    "vue": "^3.4.0",
-    "@vue/server-renderer": "^3.4.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@vitejs/plugin-vue": "^6.0.0",
     "typescript": "^5.9.3",
-    "vite": "^7.1.8"
+    "vite": "^7.1.8",
+    "vue": "^3.4.0",
+    "@vue/server-renderer": "^3.4.0"
   },
   "engines": {
     "node": ">=22.14.0"
