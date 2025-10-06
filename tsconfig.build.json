@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "declaration": true,
+    "module": "Node16",
+    "target": "ES2020",
+    "moduleResolution": "node16",
+    "allowImportingTsExtensions": false,
+    "noEmit": false
+  },
+  "include": [
+    "src/index.ts",
+    "src/iconScanner.ts",
+    "src/simpleGalleryServer.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/main.ts"
+  ]
+}

@@ -1,17 +1,31 @@
 {
   "name": "vite-plugin-vue-icon-gallery",
-  "version": "1.0.2",
+  "version": "1.2.1",
   "type": "module",
   "description": "Vite plugin for interactive SVG icon gallery in Vue projects",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./iconScanner": {
+      "types": "./dist/iconScanner.d.ts",
+      "import": "./dist/iconScanner.js"
+    },
+    "./simpleGalleryServer": {
+      "types": "./dist/simpleGalleryServer.d.ts",
+      "import": "./dist/simpleGalleryServer.js"
+    }
+  },
   "files": [
     "dist/",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc && node scripts/build-vue.js && node scripts/copy-assets.js",
+    "build": "tsc -p tsconfig.build.json && node scripts/build-vue.js && node scripts/copy-assets.js",
     "dev": "tsc --watch",
     "prepublishOnly": "npm run build",
     "test": "echo \"No tests yet\""

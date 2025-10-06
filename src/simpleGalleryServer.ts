@@ -1,7 +1,8 @@
 import { createServer as createHttpServer, Server } from 'http'
-import { resolve, extname } from 'node:path'
+import { resolve, extname, dirname } from 'node:path'
 import { readFileSync, existsSync } from 'node:fs'
-import { scanIcons } from './iconScanner'
+import { fileURLToPath } from 'node:url'
+import { scanIcons } from './iconScanner.js'
 
 export interface GalleryServerOptions {
   iconsPath: string | string[]
@@ -11,9 +12,14 @@ export interface GalleryServerOptions {
 
 let galleryServer: Server | null = null
 
-/**
- * Находит свободный порт, начиная с указанного
- */
+// Получаем путь к модулю плагина
+function getPluginPath(): string {
+  const __filename = fileURLToPath(import.meta.url)
+  const __dirname = dirname(__filename)
+  // Возвращаем путь к dist папке плагина (где находится simpleGalleryServer.js)
+  return __dirname
+}
+
 async function findAvailablePort(startPort: number): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = createHttpServer()
@@ -48,7 +54,8 @@ export async function startGalleryServer(options: GalleryServerOptions): Promise
     const url = req.url || ''
 
     if (url === '/' || url === '') {
-      const htmlPath = resolve(process.cwd(), 'dist/index.html')
+      const pluginPath = getPluginPath()
+      const htmlPath = resolve(pluginPath, 'gallery/index.html')
       if (existsSync(htmlPath)) {
         const html = readFileSync(htmlPath, 'utf-8')
         res.setHeader('Content-Type', 'text/html; charset=utf-8')
@@ -61,9 +68,9 @@ export async function startGalleryServer(options: GalleryServerOptions): Promise
       }
     }
 
-    // Обслуживание статических файлов
     if (url.startsWith('/styles.css')) {
-      const cssPath = resolve(process.cwd(), 'dist/styles.css')
+      const pluginPath = getPluginPath()
+      const cssPath = resolve(pluginPath, 'gallery/styles.css')
       if (existsSync(cssPath)) {
         res.setHeader('Content-Type', 'text/css')
         res.end(readFileSync(cssPath, 'utf-8'))
@@ -71,8 +78,9 @@ export async function startGalleryServer(options: GalleryServerOptions): Promise
       }
     }
 
-    if (url.startsWith('/main.js')) {
-      const jsPath = resolve(process.cwd(), 'dist/main.js')
+    if (url.startsWith('/gallery.js') || url.startsWith('/gallery-browser.js')) {
+      const pluginPath = getPluginPath()
+      const jsPath = resolve(pluginPath, 'gallery/gallery-browser.js')
       if (existsSync(jsPath)) {
         res.setHeader('Content-Type', 'application/javascript')
         res.end(readFileSync(jsPath, 'utf-8'))
@@ -125,7 +133,6 @@ export async function startGalleryServer(options: GalleryServerOptions): Promise
   })
 
   if (open) {
-    // открыть в браузере (опционально)
     const { exec } = await import('child_process')
     const url = `http://localhost:${availablePort}`
     const cmd =
