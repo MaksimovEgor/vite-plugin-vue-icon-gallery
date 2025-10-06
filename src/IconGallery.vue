@@ -9,6 +9,7 @@
           placeholder="Search icons..."
           class="search-input"
         />
+
         <div class="filter-buttons">
           <div class="toggle-buttons">
             <button class="toggle-btn" :class="{ active: fillEnabled }" @click="toggleFill">
@@ -22,6 +23,8 @@
           </div>
         </div>
       </div>
+
+      <p>Found {{ filteredPropIcons.length }} icons</p>
     </div>
 
     <div v-if="displayedPropIcons.length" class="icons-grid">
@@ -32,14 +35,14 @@
         @click="copyIconName(icon.name)"
         :title="`Click to copy: ${icon.name}`"
       >
-        <div class="icon-preview" :style="previewStyle">
-          <div v-html="svgHtmlMap[icon.name]"></div>
+        <div class="icon-preview">
+          <div v-html="svgHtmlMap[icon.name]" :style="previewStyle"></div>
         </div>
         <div class="icon-name">{{ icon.name }}</div>
         <div class="icon-copy-hint">Click to copy</div>
       </div>
     </div>
-    <div v-else class="no-icons">Иконки не найдены.</div>
+    <div v-else class="no-icons">No icons found.</div>
 
     <div v-if="copiedIcon" class="copy-notification">Copied: {{ copiedIcon }}</div>
   </div>
@@ -85,6 +88,7 @@ const sanitizeSvg = (raw: string) =>
     .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
     .replace(/ on[a-z]+="[^"]*"/gi, '')
     .replace(/ on[a-z]+='[^']*'/gi, '')
+
 const toggleStroke = () => {
   strokeEnabled.value = !strokeEnabled.value
 }
@@ -93,9 +97,7 @@ const toggleFill = () => {
   fillEnabled.value = !fillEnabled.value
 }
 
-const updateColors = () => {
-  // reactive via computed below
-}
+const updateColors = () => {}
 
 const previewStyle = computed(() => ({
   '--icon-fill': fillEnabled.value ? currentColor.value : 'none',

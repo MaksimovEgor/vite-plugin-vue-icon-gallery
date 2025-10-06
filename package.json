@@ -1,6 +1,6 @@
 {
   "name": "vue-icon-gallery",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "Vite plugin for interactive SVG icon gallery in Vue projects",
   "main": "dist/index.js",

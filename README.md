@@ -1,20 +1,24 @@
 # 🎨 vue-icon-gallery
 
-Простой плагин для предпросмотра SVG-иконок в проектах на Vue. Показывает реальные иконки из ваших папок, позволяет искать и быстро проверять цвет fill/stroke.
+A simple plugin for previewing SVG icons in Vue projects. Displays actual icons from your folders, allows searching and quick fill/stroke color checking.
 
-## Требования
+## Preview
+
+![Icon gallery preview](./src/assets/screen.png)
+
+## Requirements
 
 - Vue 3
 - Vite 7+
 - Node.js 20+
 
-## Установка
+## Installation
 
 ```bash
 npm i -D vue-icon-gallery
 ```
 
-## Использование (vite.config.ts)
+## Usage (vite.config.ts)
 
 ```typescript
 import { defineConfig } from 'vite'
@@ -24,29 +28,29 @@ import { vueIconGallery } from 'vue-icon-gallery'
 export default defineConfig({
   plugins: [
     vue(),
-   vueIconGallery({
-      iconsPath: ['src/components/app-svg', 'src/components/icons', ...], // Путь к папке с иконками
-      port: 3002, // (по умолчанию: 3002)
-      open: true // Автоматически открывать браузер, по умолчанию: true
+    vueIconGallery({
+      iconsPath: ['src/components/app-svg', 'src/components/icons'], // Path to icons folder
+      port: 3002, // (default: 3002)
+      open: true // Automatically open browser, default: true
     })
   ]
 })
 ```
 
-Запустите dev-сервер как обычно. Плагин поднимет отдельный сервер галереи и выведет URL в консоль.
+Start the dev server as usual. The plugin will spin up a separate gallery server and output the URL to the console.
 
-## Как это работает
+## How it works
 
-- Плагин сканирует указанные папки иконок и поднимает сервер галереи.
-- Галерея отображает найденные SVG.
-- По клику копируется имя иконки.
+- The plugin scans specified icon folders and starts a gallery server.
+- The gallery displays found SVG files.
+- Clicking copies the icon name.
 
-## 🚀 Преимущества
+## 🚀 Advantages
 
-- ✅ **Не влияет на production build** - работает только в dev режиме
-- ✅ **Автоматическое обновление** - новые иконки появляются без перезапуска
-- ✅ **Гибкая настройка** - настраиваемые пути и порт
+- ✅ **No impact on production build** - works only in dev mode
+- ✅ **Automatic updates** - new icons appear without restart
+- ✅ **Flexible configuration** - customizable paths and port
 
-## Лицензия
+## License
 
 MIT
