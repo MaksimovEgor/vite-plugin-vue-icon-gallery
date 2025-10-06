@@ -3,7 +3,7 @@
 ## 📦 Установка
 
 ```bash
-npm install vite-plugin-vue-icon-gallery --save-dev
+npm install vue-icon-gallery --save-dev
 ```
 
 ## 🚀 Использование
@@ -11,20 +11,20 @@ npm install vite-plugin-vue-icon-gallery --save-dev
 ### 1. Настройка в vite.config.ts
 
 ```typescript
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
-import { vueIconGallery } from "vite-plugin-vue-icon-gallery";
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import { vueIconGallery } from 'vue-icon-gallery'
 
 export default defineConfig({
   plugins: [
     vue(),
     vueIconGallery({
-      iconsPath: "src/components/app-svg", // Путь к папке с иконками
-      port: 3002, // Порт для галереи
-      open: true, // Автоматически открывать браузер
-    }),
-  ],
-});
+      iconsPath: ['src/components/app-svg', 'src/components/icons', ...], // Путь к папке с иконками
+      port: 3002, // (по умолчанию: 3002)
+      open: true // Автоматически открывать браузер, по умолчанию: true
+    })
+  ]
+})
 ```
 
 ### 2. Запуск
@@ -35,36 +35,22 @@ npm run dev
 
 После запуска:
 
-- Основной проект будет доступен на `http://localhost:5173`
-- Галерея иконок будет доступна на `http://localhost:3002`
+- Галерея иконок будет доступна на указанном вами порте или на другом свободном
+  `http://localhost:3002`
 
 ## ⚙️ Опции конфигурации
 
 ```typescript
 interface IconGalleryOptions {
   /** Путь к папке с иконками (по умолчанию: 'src/components/app-svg') */
-  iconsPath?: string;
+  iconsPath?: string
 
   /** Порт для галереи (по умолчанию: 3002) */
-  port?: number;
+  port?: number
 
   /** Автоматически открывать браузер (по умолчанию: true) */
-  open?: boolean;
+  open?: boolean
 }
-```
-
-## 📁 Структура проекта
-
-```
-your-project/
-├── src/
-│   └── components/
-│       └── app-svg/          # ← Ваши SVG иконки здесь
-│           ├── HomeIcon.vue
-│           ├── UserIcon.vue
-│           └── SettingsIcon.vue
-├── vite.config.ts
-└── package.json
 ```
 
 ## 🎯 Возможности галереи
@@ -79,8 +65,8 @@ your-project/
 ## 🔧 Требования
 
 - Vue 3.x
-- Vite 4.x+
-- Node.js 16+
+- Vite 7.x+
+- Node.js 20+
 
 ## 📝 Примеры иконок
 
@@ -89,13 +75,7 @@ your-project/
 ```vue
 <!-- src/components/app-svg/HomeIcon.vue -->
 <template>
-  <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
       d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z"
       stroke="currentColor"
@@ -125,14 +105,6 @@ your-project/
 - ✅ **Гибкая настройка** - настраиваемые пути и порты
 - ✅ **TypeScript поддержка** - полная типизация
 - ✅ **Красивый UI** - современный дизайн с темной темой
-
-## 🤝 Вклад в проект
-
-1. Fork репозитория
-2. Создайте feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit изменения (`git commit -m 'Add amazing feature'`)
-4. Push в branch (`git push origin feature/amazing-feature`)
-5. Откройте Pull Request
 
 ## 📄 Лицензия
 

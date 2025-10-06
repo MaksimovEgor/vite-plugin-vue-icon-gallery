@@ -20,6 +20,38 @@ function getPluginPath(): string {
   return __dirname
 }
 
+function getGalleryDir(): string {
+  // В проде после сборки галерея лежит в dist/gallery
+  return resolve(getPluginPath(), 'gallery')
+}
+
+function contentTypeByExt(path: string): string {
+  const ext = extname(path)
+  switch (ext) {
+    case '.html':
+      return 'text/html; charset=utf-8'
+    case '.css':
+      return 'text/css'
+    case '.js':
+      return 'application/javascript'
+    case '.map':
+      return 'application/json'
+    case '.json':
+      return 'application/json'
+    case '.svg':
+      return 'image/svg+xml'
+    case '.png':
+      return 'image/png'
+    case '.jpg':
+    case '.jpeg':
+      return 'image/jpeg'
+    case '.ico':
+      return 'image/x-icon'
+    default:
+      return 'application/octet-stream'
+  }
+}
+
 async function findAvailablePort(startPort: number): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = createHttpServer()
@@ -53,37 +85,12 @@ export async function startGalleryServer(options: GalleryServerOptions): Promise
   galleryServer = createHttpServer((req, res) => {
     const url = req.url || ''
 
+    // API endpoints
     if (url === '/' || url === '') {
-      const pluginPath = getPluginPath()
-      const htmlPath = resolve(pluginPath, 'gallery/index.html')
-      if (existsSync(htmlPath)) {
-        const html = readFileSync(htmlPath, 'utf-8')
-        res.setHeader('Content-Type', 'text/html; charset=utf-8')
-        res.end(html)
-        return
-      } else {
-        res.statusCode = 404
-        res.end('HTML file not found')
-        return
-      }
-    }
-
-    if (url.startsWith('/styles.css')) {
-      const pluginPath = getPluginPath()
-      const cssPath = resolve(pluginPath, 'gallery/styles.css')
-      if (existsSync(cssPath)) {
-        res.setHeader('Content-Type', 'text/css')
-        res.end(readFileSync(cssPath, 'utf-8'))
-        return
-      }
-    }
-
-    if (url.startsWith('/gallery.js') || url.startsWith('/gallery-browser.js')) {
-      const pluginPath = getPluginPath()
-      const jsPath = resolve(pluginPath, 'gallery/gallery-browser.js')
-      if (existsSync(jsPath)) {
-        res.setHeader('Content-Type', 'application/javascript')
-        res.end(readFileSync(jsPath, 'utf-8'))
+      const indexPath = resolve(getGalleryDir(), 'index.html')
+      if (existsSync(indexPath)) {
+        res.setHeader('Content-Type', contentTypeByExt(indexPath))
+        res.end(readFileSync(indexPath, 'utf-8'))
         return
       }
     }
@@ -117,6 +124,15 @@ export async function startGalleryServer(options: GalleryServerOptions): Promise
         res.statusCode = 404
         res.end('Icon not found')
       }
+      return
+    }
+
+    // Static assets from built gallery (dist/gallery)
+    const safeUrl = url.split('?')[0].split('#')[0]
+    const filePath = resolve(getGalleryDir(), '.' + safeUrl)
+    if (existsSync(filePath)) {
+      res.setHeader('Content-Type', contentTypeByExt(filePath))
+      res.end(readFileSync(filePath))
       return
     }
 

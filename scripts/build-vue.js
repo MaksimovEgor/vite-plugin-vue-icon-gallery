@@ -1,3 +1,3 @@
-// Простой скрипт для копирования браузерной версии галереи
-console.log('🔨 Подготовка браузерной версии галереи...')
-console.log('✅ Браузерная версия готова (файлы будут скопированы в copy-assets.js)')
+// Deprecated: Gallery is now built via vite.gallery.config.ts
+// This file is kept for backwards compatibility but does nothing
+console.log('⚠️  build-vue.js is deprecated. Use "npm run build:gallery" instead.')

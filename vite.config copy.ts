@@ -4,7 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import mkcert from 'vite-plugin-mkcert'
-import { vueIconGallery } from 'vite-plugin-vue-icon-gallery'
+import { vueIconGallery } from 'vue-icon-gallery'
 
 export default defineConfig(({ mode }) => {
   process.env = Object.assign(process.env, loadEnv(mode, process.cwd()))

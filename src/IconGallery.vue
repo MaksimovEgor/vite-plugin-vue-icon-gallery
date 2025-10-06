@@ -1,437 +1,430 @@
 <template>
   <div class="icon-gallery">
-    <header class="gallery-header">
-      <h1>🎨 Vue Icon Gallery</h1>
-      <p class="gallery-subtitle">
-        Найдено {{ filteredIcons.length }} из {{ icons.length }} иконок
-      </p>
-
-      <div class="controls">
-        <div class="search-container">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Поиск иконок..."
-            class="search-input"
-          />
-          <span class="search-icon">🔍</span>
-        </div>
-
-        <div class="color-controls">
-          <div class="control-group">
-            <label>
-              <input v-model="showFill" type="checkbox" class="control-checkbox" />
+    <div class="gallery-header">
+      <h2>Vue Icon Gallery</h2>
+      <div class="search-container">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search icons..."
+          class="search-input"
+        />
+        <div class="filter-buttons">
+          <div class="toggle-buttons">
+            <button class="toggle-btn" :class="{ active: fillEnabled }" @click="toggleFill">
               Fill
-            </label>
-            <input v-model="fillColor" type="color" class="color-input" :disabled="!showFill" />
-          </div>
-
-          <div class="control-group">
-            <label>
-              <input v-model="showStroke" type="checkbox" class="control-checkbox" />
+            </button>
+            <button class="toggle-btn" :class="{ active: strokeEnabled }" @click="toggleStroke">
               Stroke
-            </label>
-            <input v-model="strokeColor" type="color" class="color-input" :disabled="!showStroke" />
+            </button>
+
+            <input v-model="currentColor" type="color" class="color-picker" @input="updateColors" />
           </div>
         </div>
       </div>
-    </header>
+    </div>
 
-    <main class="gallery-main">
-      <div v-if="filteredIcons.length === 0" class="no-results">
-        <p>Иконки не найдены</p>
-        <button @click="clearSearch" class="clear-button">Очистить поиск</button>
-      </div>
-
-      <div v-else class="icons-grid">
-        <div
-          v-for="icon in filteredIcons"
-          :key="icon.name"
-          class="icon-card"
-          @click="copyIconName(icon.name)"
-          :title="`Кликните чтобы скопировать: ${icon.name}`"
-        >
-          <div class="icon-container">
-            <img
-              :src="`/api/icon/${icon.name}`"
-              :alt="icon.name"
-              class="icon-image"
-              :style="iconStyle"
-              @error="handleImageError"
-            />
-          </div>
-          <div class="icon-name">{{ icon.name }}</div>
+    <div v-if="displayedPropIcons.length" class="icons-grid">
+      <div
+        v-for="icon in displayedPropIcons"
+        :key="icon.name"
+        class="icon-item"
+        @click="copyIconName(icon.name)"
+        :title="`Click to copy: ${icon.name}`"
+      >
+        <div class="icon-preview" :style="previewStyle">
+          <div v-html="svgHtmlMap[icon.name]"></div>
         </div>
+        <div class="icon-name">{{ icon.name }}</div>
+        <div class="icon-copy-hint">Click to copy</div>
       </div>
-    </main>
+    </div>
+    <div v-else class="no-icons">Иконки не найдены.</div>
 
-    <footer class="gallery-footer">
-      <p>Кликните на иконку, чтобы скопировать её название</p>
-    </footer>
+    <div v-if="copiedIcon" class="copy-notification">Copied: {{ copiedIcon }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 
+// Props provided by gallery server (fallback mode)
 interface IconInfo {
   name: string
   path: string
 }
+const props = defineProps<{
+  icons?: IconInfo[]
+}>()
 
-interface Props {
-  icons: IconInfo[]
+const searchQuery = ref('')
+const copiedIcon = ref('')
+
+const fillEnabled = ref(false)
+const strokeEnabled = ref(true)
+const currentColor = ref('#ffffee')
+
+const propIcons = computed(() => props.icons ?? [])
+const filteredPropIcons = computed(() => {
+  const list = propIcons.value
+  if (!searchQuery.value) return list
+  return list.filter((icon) => icon.name.toLowerCase().includes(searchQuery.value.toLowerCase()))
+})
+
+// Cache for inlined SVG HTML per icon name
+const svgHtmlMap = ref<Record<string, string>>({})
+
+// Only render icons that have inlined SVG ready
+const displayedPropIcons = computed(() =>
+  filteredPropIcons.value.filter((i) => Boolean(svgHtmlMap.value[i.name]))
+)
+
+// Very basic sanitizer: remove <script> tags and inline on* handlers
+const sanitizeSvg = (raw: string) =>
+  raw
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+    .replace(/ on[a-z]+="[^"]*"/gi, '')
+    .replace(/ on[a-z]+='[^']*'/gi, '')
+const toggleStroke = () => {
+  strokeEnabled.value = !strokeEnabled.value
 }
 
-const props = defineProps<Props>()
+const toggleFill = () => {
+  fillEnabled.value = !fillEnabled.value
+}
 
-// Реактивные данные
-const searchQuery = ref('')
-const showFill = ref(true)
-const showStroke = ref(false)
-const fillColor = ref('#fff')
-const strokeColor = ref('#fff')
+const updateColors = () => {
+  // reactive via computed below
+}
 
-// Вычисляемые свойства
-const filteredIcons = computed(() => {
-  if (!searchQuery.value) {
-    return props.icons
-  }
+const previewStyle = computed(() => ({
+  '--icon-fill': fillEnabled.value ? currentColor.value : 'none',
+  '--icon-stroke': strokeEnabled.value ? currentColor.value : 'none'
+}))
 
-  return props.icons.filter((icon) =>
-    icon.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-  )
-})
-
-const iconStyle = computed(() => {
-  const style: Record<string, string> = {}
-
-  if (showFill.value) {
-    style.fill = fillColor.value
-  }
-
-  if (showStroke.value) {
-    style.stroke = strokeColor.value
-  }
-
-  return style
-})
-
-// Методы
+// Copy icon name to clipboard
 const copyIconName = async (iconName: string) => {
   try {
     await navigator.clipboard.writeText(iconName)
-    showNotification(`Скопировано: ${iconName}`)
+    copiedIcon.value = iconName
+    setTimeout(() => (copiedIcon.value = ''), 2000)
   } catch (err) {
-    console.error('Ошибка копирования:', err)
-    // Fallback для старых браузеров
-    const textArea = document.createElement('textarea')
-    textArea.value = iconName
-    document.body.appendChild(textArea)
-    textArea.select()
-    document.execCommand('copy')
-    document.body.removeChild(textArea)
-    showNotification(`Скопировано: ${iconName}`)
+    console.error('Failed to copy icon name:', err)
   }
 }
 
-const clearSearch = () => {
-  searchQuery.value = ''
+const fetchSvgIfNeeded = async (name: string) => {
+  if (svgHtmlMap.value[name]) return
+  try {
+    const res = await fetch(`/api/icon/${name}`)
+    const text = await res.text()
+    // Find the <svg ...> regardless of XML declaration/BOM
+    const idx = text.toLowerCase().indexOf('<svg')
+    if (idx !== -1) {
+      const svgOnly = text.slice(idx)
+      svgHtmlMap.value[name] = sanitizeSvg(svgOnly)
+    }
+  } catch (e) {
+    // ignore fetch errors; <img> fallback remains
+  }
 }
 
-const handleImageError = (event: Event) => {
-  const img = event.target as HTMLImageElement
-  img.style.display = 'none'
-  console.warn(`Не удалось загрузить иконку: ${img.alt}`)
-}
-
-const showNotification = (message: string) => {
-  // Простое уведомление (можно улучшить)
-  const notification = document.createElement('div')
-  notification.textContent = message
-  notification.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #4CAF50;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 4px;
-    z-index: 1000;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  `
-  document.body.appendChild(notification)
-
-  setTimeout(() => {
-    document.body.removeChild(notification)
-  }, 3000)
-}
-
-// Инициализация
-onMounted(() => {
-  console.log(`🎨 Icon Gallery загружена с ${props.icons.length} иконками`)
-})
+// Fetch inline SVG for currently visible prop icons
+watch(
+  () => filteredPropIcons.value.map((i) => i.name),
+  (names) => {
+    names.forEach((n) => void fetchSvgIfNeeded(n))
+  },
+  { immediate: true }
+)
 </script>
 
-<style scoped>
+<style>
 .icon-gallery {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: var(--col-2);
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: #333;
+  border-radius: 0.75rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 .gallery-header {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  padding: 2rem;
-  text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  margin-bottom: 2rem;
 }
 
-.gallery-header h1 {
-  margin: 0 0 0.5rem 0;
-  font-size: 2.5rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.gallery-subtitle {
-  margin: 0 0 2rem 0;
-  color: #666;
-  font-size: 1.1rem;
-}
-
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2rem;
-  justify-content: center;
-  align-items: center;
+.gallery-header h2 {
+  margin: 0 0 1rem 0;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--font-color);
 }
 
 .search-container {
-  position: relative;
   display: flex;
+  gap: 1rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .search-input {
-  padding: 0.75rem 1rem 0.75rem 3rem;
-  border: 2px solid #e1e5e9;
-  border-radius: 25px;
+  flex: 1;
+  min-width: 200px;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--col-4);
+  border-radius: 0.5rem;
   font-size: 1rem;
-  width: 300px;
-  transition: all 0.3s ease;
-  outline: none;
+  background: var(--col-3);
+  color: var(--font-color);
+  font-family: 'NotoSans', sans-serif;
 }
 
 .search-input:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  outline: none;
+  border-color: var(--primary);
 }
 
-.search-icon {
-  position: absolute;
-  left: 1rem;
-  color: #999;
-  pointer-events: none;
+.search-input::placeholder {
+  color: var(--col-7);
 }
 
-.color-controls {
+.filter-buttons {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
-.control-group {
+.toggle-buttons {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  gap: 0.25rem;
+  background: var(--col-3);
+  border-radius: 0.75rem;
+  padding: 0.25rem;
+  border: 1px solid var(--col-4);
 }
 
-.control-group label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.toggle-btn {
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--col-8);
+  font-size: 0.875rem;
   font-weight: 500;
+  font-family: 'NotoSans', sans-serif;
   cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
-.control-checkbox {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
+.toggle-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--primary);
+  opacity: 0;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 0.5rem;
 }
 
-.color-input {
-  width: 40px;
-  height: 40px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: transform 0.2s ease;
+.toggle-btn:hover::before {
+  opacity: 0.1;
 }
 
-.color-input:hover {
+.toggle-btn.active {
+  background: var(--primary);
+  color: var(--col-1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.toggle-btn.active::before {
+  opacity: 0;
+}
+
+.toggle-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.color-control {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--col-3);
+  border: 1px solid var(--col-4);
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.color-picker {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 2px solid var(--col-4);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  background: none;
+  padding: 0;
+  transition: all 0.2s ease;
+}
+
+.color-picker:hover {
+  border-color: var(--primary);
+  transform: scale(1.05);
+}
+
+.color-picker:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(166, 100%, 79%, 0.25);
+}
+
+.color-preview {
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 2px solid var(--col-4);
+  border-radius: 0.375rem;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.color-preview:hover {
+  border-color: var(--primary);
   transform: scale(1.1);
-}
-
-.color-input:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.gallery-main {
-  padding: 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.no-results {
-  text-align: center;
-  padding: 4rem 2rem;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.no-results p {
-  font-size: 1.2rem;
-  color: #666;
-  margin: 0 0 1.5rem 0;
-}
-
-.clear-button {
-  background: #667eea;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.clear-button:hover {
-  background: #5a6fd8;
 }
 
 .icons-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1.5rem;
-  padding: 1rem 0;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-auto-rows: max-content;
+  gap: 1rem;
 }
 
-.icon-card {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  padding: 1.5rem;
-  text-align: center;
+.icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid var(--col-4);
+  border-radius: 0.75rem;
+  background: var(--col-3);
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s;
+  position: relative;
 }
 
-.icon-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-  background: rgba(255, 255, 255, 1);
+.icon-item:hover {
+  border-color: var(--primary);
+  background: var(--col-4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.icon-container {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 1rem auto;
+.icon-preview {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8f9fa;
-  border-radius: 12px;
-  transition: background 0.3s ease;
+  margin-bottom: 0.5rem;
+  color: var(--font-color);
 }
 
-.icon-card:hover .icon-container {
-  background: #e9ecef;
-}
+/* Do not constrain intrinsic icon size */
 
-.icon-image {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  transition: transform 0.3s ease;
+/* Force color on all SVG descendants using CSS vars so icons without explicit
+   attributes still receive color. Presentation attributes will be overridden. */
+.icon-preview svg:not([fill]),
+.icon-preview svg *:not([fill]) {
+  fill: var(--icon-fill);
 }
-
-.icon-card:hover .icon-image {
-  transform: scale(1.1);
+.icon-preview svg:not([stroke]),
+.icon-preview svg *:not([stroke]) {
+  stroke: var(--icon-stroke);
 }
 
 .icon-name {
-  font-weight: 600;
-  color: #333;
-  font-size: 0.9rem;
-  word-break: break-word;
-  line-height: 1.3;
-}
-
-.gallery-footer {
+  color: var(--font-color);
   text-align: center;
-  padding: 2rem;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.9rem;
+  word-break: break-word;
+  font-family: 'NotoSans', sans-serif;
 }
 
-/* Адаптивность */
+.icon-copy-hint {
+  font-size: 0.75rem;
+  color: var(--col-7);
+  margin-top: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+  font-family: 'NotoSans', sans-serif;
+}
+
+.icon-item:hover .icon-copy-hint {
+  opacity: 1;
+}
+
+.copy-notification {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  background: var(--pos-3);
+  color: var(--col-1);
+  padding: 1rem 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
+  font-family: 'NotoSans', sans-serif;
+  font-weight: 500;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 @media (max-width: 768px) {
-  .gallery-header {
-    padding: 1.5rem 1rem;
-  }
-
-  .gallery-header h1 {
-    font-size: 2rem;
-  }
-
-  .controls {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .search-input {
-    width: 100%;
-    max-width: 300px;
-  }
-
-  .color-controls {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .gallery-main {
+  .icon-gallery {
     padding: 1rem;
   }
 
   .icons-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .icon-item {
+    padding: 0.75rem;
+  }
+
+  .search-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-buttons {
+    flex-direction: column;
+    align-items: stretch;
     gap: 1rem;
   }
 
-  .icon-card {
-    padding: 1rem;
+  .toggle-buttons {
+    justify-content: center;
   }
 
-  .icon-container {
-    width: 60px;
-    height: 60px;
+  .color-control {
+    justify-content: center;
   }
 }
 </style>
